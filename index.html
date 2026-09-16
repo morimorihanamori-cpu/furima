@@ -16,12 +16,9 @@
     </div>
   </header>
 
-  <!-- 全体を包むレイアウトコンテナ -->
   <div class="main-layout container">
     
-    <!-- メインコンテンツ（左側） -->
     <main class="main-content">
-      <!-- 入力フォーム画面 -->
       <section id="input-section" class="card">
         <div class="upload-area" id="drop-zone">
           <input type="file" id="file-input" accept="image/*" hidden>
@@ -79,7 +76,6 @@
 
         <button id="generate-btn" class="btn-primary" disabled>出品文を作成する</button>
 
-        <!-- 【アフィリエイト枠1】楽天トラベル -->
         <div class="affiliate-card">
           <h3>🧳 旅行や出張のお得な予約はこちら！</h3>
           <div class="affiliate-banner-placeholder">
@@ -90,51 +86,16 @@
         </div>
       </section>
 
-      <!-- ローディング表示 -->
       <section id="loading-section" class="card hidden">
         <div class="spinner"></div>
         <p class="loading-text">AIが画像を解析して出品文を作成中...</p>
         <p class="loading-subtext">数秒〜十数秒かかります。そのままお待ちください。</p>
       </section>
 
-      <!-- 生成結果画面 -->
       <section id="result-section" class="hidden">
         <div class="action-bar-top">
           <button id="copy-all-btn" class="btn-primary btn-lg">✨ 出品全文をまとめてコピー</button>
           <button id="reset-btn" class="btn-secondary">🔄 もう一度生成する</button>
-        </div>
-
-        <!-- AI推定価格 -->
-        <div class="result-card">
-          <div class="card-header">
-            <h2>■ 価格の目安</h2>
-          </div>
-          <div class="card-body">
-            <div id="price-estimate-content">
-              <div class="price-grid">
-                <div class="price-item">
-                  <span class="price-label">早く売りたい</span>
-                  <span id="price-quicksell-val" class="price-val">-</span>
-                </div>
-                <div class="price-item">
-                  <span class="price-label">標準</span>
-                  <span id="price-standard-val" class="price-val">-</span>
-                </div>
-                <div class="price-item">
-                  <span class="price-label">高め</span>
-                  <span id="price-high-val" class="price-val">-</span>
-                </div>
-              </div>
-              <div class="price-recommended-box">
-                <span class="price-recommended-label">【おすすめ出品価格】</span>
-                <span id="price-recommended-val" class="price-recommended-val">-</span>
-              </div>
-              <p class="price-disclaimer">※AIによる参考価格です。実際の相場や商品の状態によって価格は異なります。</p>
-            </div>
-            <div id="price-estimate-error" class="result-text hidden">
-              価格を推定できませんでした
-            </div>
-          </div>
         </div>
 
         <div class="result-card">
@@ -197,7 +158,6 @@
           </div>
         </div>
 
-        <!-- 【アフィリエイト枠2】お名前.com -->
         <div class="affiliate-card">
           <h3>🌐 自分だけのWebサイトやショップを作成！おすすめドメイン取得</h3>
           <div class="affiliate-banner-placeholder">
@@ -207,7 +167,6 @@
           </div>
         </div>
 
-        <!-- フリマ出品におすすめ商品セクション（アフィリエイト枠） -->
         <div class="card recommend-section">
           <div class="recommend-header">
             <h3 class="recommend-title">📦 フリマ出品におすすめ</h3>
@@ -216,21 +175,22 @@
           <div class="recommend-grid">
             
             <div class="recommend-card">
-              <h4 class="recommend-item-title">① 梱包用OPP袋</h4>
+              <h4 class="recommend-item-title">メルカリ</h4>
+              <p class="recommend-item-desc">生成された出品文を使ってすぐにメルカリで出品できます。</p>
+              <a href="https://px.a8.net/svt/ejp?a8mat=4BCBF+4784FM+5LNQ+5YJRM" target="_blank" rel="nofollow noopener noreferrer" class="btn-primary btn-sm recommend-btn">メルカリで出品する</a>
+              <img border="0" width="1" height="1" src="https://www14.a8.net/0.gif?a8mat=4BCBF+4784FM+5LNQ+5YJRM" alt="">
+            </div>
+
+            <div class="recommend-card">
+              <h4 class="recommend-item-title">梱包用OPP袋</h4>
               <p class="recommend-item-desc">洋服などの出品時の防水対策におすすめ</p>
-              <a id="affiliate-btn-1" href="#" target="_blank" rel="noopener noreferrer sponsored" class="btn-secondary btn-sm recommend-btn">詳しく見る</a>
+              <a href="#" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-sm recommend-btn">詳しく見る</a>
             </div>
 
             <div class="recommend-card">
-              <h4 class="recommend-item-title">② 宅配ビニール袋</h4>
-              <p class="recommend-item-desc">衣類や小物の発送に使いやすい梱包資材</p>
-              <a id="affiliate-btn-2" href="#" target="_blank" rel="noopener noreferrer sponsored" class="btn-secondary btn-sm recommend-btn">詳しく見る</a>
-            </div>
-
-            <div class="recommend-card">
-              <h4 class="recommend-item-title">③ 商品撮影ボックス</h4>
+              <h4 class="recommend-item-title">商品撮影ボックス</h4>
               <p class="recommend-item-desc">商品写真をきれいに撮りたい人向け</p>
-              <a id="affiliate-btn-3" href="#" target="_blank" rel="noopener noreferrer sponsored" class="btn-secondary btn-sm recommend-btn">詳しく見る</a>
+              <a href="#" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-sm recommend-btn">詳しく見る</a>
             </div>
 
           </div>
@@ -238,9 +198,7 @@
       </section>
     </main>
 
-    <!-- サイドバー（右側） -->
     <aside class="sidebar">
-      <!-- 使い方ガイド -->
       <div class="sidebar-card">
         <h3>💡 フリマAIメーカーの使い方</h3>
         <ol class="sidebar-list">
@@ -250,7 +208,6 @@
         </ol>
       </div>
 
-      <!-- サイドバー用の広告・追加コンテンツ枠 -->
       <div class="sidebar-card">
         <h3>📢 おすすめサービス</h3>
         <div class="affiliate-banner-placeholder">
