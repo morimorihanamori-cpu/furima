@@ -1,1 +1,175 @@
 
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>フリマAIメーカー | 写真を入れるだけ出品時短</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- トップヘッダー ＆ 残り回数表示 -->
+  <header class="header">
+    <div class="logo">フリマAIメーカー</div>
+    <div class="usage-badge">
+      今月の残り生成回数: <strong id="remainingCount">5</strong>回
+    </div>
+  </header>
+
+  <!-- ファーストビュー（TikTok/Reelsユーザー向け明確なコピー） -->
+  <section class="hero">
+    <h1>写真を入れるだけ。<br>フリマの出品作業をAIで時短。</h1>
+    <p>タイトル・商品説明・推定価格・ハッシュタグまでまとめて作成</p>
+    <a href="#upload-section" class="cta-btn">無料で使ってみる</a>
+  </section>
+
+  <main class="container" id="upload-section">
+    <!-- 入力フォーム -->
+    <form id="generateForm" class="card">
+      <div class="form-group">
+        <label>商品写真（必須）</label>
+        <input type="file" id="imageInput" accept="image/*" required>
+      </div>
+
+      <div class="form-group">
+        <label>補足情報（任意）</label>
+        <input type="text" id="brandInput" placeholder="ブランド・メーカー">
+        <input type="text" id="sizeInput" placeholder="サイズ">
+        <input type="text" id="conditionInput" placeholder="商品の状態（例: 目立った傷なし）">
+      </div>
+
+      <button type="submit" id="submitBtn" class="btn-primary">AIで出品情報をつくる</button>
+    </form>
+
+    <div id="errorContainer" class="error-box hidden"></div>
+
+    <!-- AI生成結果表示エリア -->
+    <section id="resultContainer" class="result-section hidden">
+      
+      <!-- 1. AI推定価格 -->
+      <div class="card price-card">
+        <h3>💰 AI推定価格</h3>
+        <div class="price-main">
+          <span>おすすめ出品価格</span>
+          <div class="price-val"><strong id="priceRecommended">0</strong> 円</div>
+          <small>想定範囲: <span id="priceRange">-</span></small>
+        </div>
+        <div class="price-grid">
+          <div>⚡ 早く売りたい<br><b id="priceQuick">0</b>円</div>
+          <div>⚖️ 標準<br><b id="priceStandard">0</b>円</div>
+          <div>💎 高め設定<br><b id="priceHigh">0</b>円</div>
+        </div>
+        <p class="disclaimer">※推定価格はAIによる参考値であり、実際の販売価格を保証するものではありません。</p>
+      </div>
+
+      <!-- 2. タイトル3案 -->
+      <div class="card">
+        <h3>🏷️ AIタイトル提案（3パターン）</h3>
+        
+        <div class="title-option">
+          <span class="label">【検索重視】</span>
+          <p id="titleSearch"></p>
+          <button onclick="copyText('titleSearch')">コピー</button>
+        </div>
+        
+        <div class="title-option">
+          <span class="label">【クリック重視】</span>
+          <p id="titleClick"></p>
+          <button onclick="copyText('titleClick')">コピー</button>
+        </div>
+
+        <div class="title-option">
+          <span class="label">【シンプル】</span>
+          <p id="titleSimple"></p>
+          <button onclick="copyText('titleSimple')">コピー</button>
+        </div>
+      </div>
+
+      <!-- 3. 写真チェック -->
+      <div class="card">
+        <h3>📸 AI写真チェック</h3>
+        <div id="photoCheckList" class="check-grid"></div>
+        <div class="suggestions-box">
+          <strong>💡 追加すると売れやすくなる写真:</strong>
+          <ul id="photoSuggestions"></ul>
+        </div>
+      </div>
+
+      <!-- 4. 商品説明文 -->
+      <div class="card">
+        <div class="card-header">
+          <h3>📝 商品説明文</h3>
+          <button onclick="copyText('descriptionText')">全文コピー</button>
+        </div>
+        <pre id="descriptionText" class="text-box"></pre>
+      </div>
+
+      <!-- 5. ハッシュタグ -->
+      <div class="card">
+        <div class="card-header">
+          <h3>#️⃣ ハッシュタグ</h3>
+          <button onclick="copyText('hashtagText')">コピー</button>
+        </div>
+        <p id="hashtagText" class="tag-box"></p>
+      </div>
+
+      <!-- 6. 梱包方法 ＆ アフィリエイト -->
+      <div class="card">
+        <h3>📦 おすすめ梱包方法</h3>
+        <p id="packingMethod" class="packing-text"></p>
+        
+        <div class="affiliate-section">
+          <div class="affiliate-header">
+            <span>📦 フリマ出品におすすめ</span>
+            <span class="pr-badge">PR</span>
+          </div>
+          <div id="affiliateList" class="affiliate-list"></div>
+        </div>
+      </div>
+
+      <!-- 7. PROプラン導線 -->
+      <div class="card pro-banner">
+        <span class="pro-tag">PRO Upgrade</span>
+        <h3>もっと便利に使う</h3>
+        <p>月額480円で「月50回生成・履歴保存・詳細分析」を解放</p>
+        <button onclick="openProModal()" class="btn-pro">PROプランを見る</button>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- PROプラン案内モーダル -->
+  <div id="proModal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close" onclick="closeProModal()">&times;</span>
+      <h2>フリマAI PRO</h2>
+      <div class="plan-grid">
+        <div class="plan-card">
+          <h3>PRO</h3>
+          <p class="price">月額 480円</p>
+          <ul>
+            <li>月50回まで生成</li>
+            <li>タイトル3案・AI価格提案</li>
+            <li>写真チェック・梱包提案</li>
+            <li>広告表示の削減</li>
+          </ul>
+          <button class="btn-primary">PROに登録する</button>
+        </div>
+        <div class="plan-card">
+          <h3>PRO+ (準備中)</h3>
+          <p class="price">月額 980円</p>
+          <ul>
+            <li>生成回数無制限</li>
+            <li>複数商品一括生成</li>
+            <li>テンプレート保存</li>
+          </ul>
+          <button class="btn-secondary" disabled>準備中</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
