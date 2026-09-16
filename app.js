@@ -80,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     try {
-      // APIパスを相対パス (/api/generate) に変更してCORSを完全回避
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
@@ -108,6 +107,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 生成結果の表示処理
   function displayResult(data) {
+    // 1. AI推定価格の表示処理（エラーハンドリング込み）
+    const contentEl = document.getElementById('price-estimate-content');
+    const errorEl = document.getElementById('price-estimate-error');
+
+    if (data && data.priceEstimate && (data.priceEstimate.recommended || data.priceEstimate.standard)) {
+      const formatPrice = (val) => val ? `${Number(val).toLocaleString()}円` : '-';
+
+      document.getElementById('price-quicksell-val').textContent = formatPrice(data.priceEstimate.quickSell);
+      document.getElementById('price-standard-val').textContent = formatPrice(data.priceEstimate.standard);
+      document.getElementById('price-high-val').textContent = formatPrice(data.priceEstimate.high);
+      document.getElementById('price-recommended-val').textContent = formatPrice(data.priceEstimate.recommended || data.priceEstimate.standard);
+
+      contentEl.classList.remove('hidden');
+      errorEl.classList.add('hidden');
+    } else {
+      contentEl.classList.add('hidden');
+      errorEl.classList.remove('hidden');
+    }
+
+    // 2. 既存アイテムの表示
     document.getElementById('result-title').textContent = data.title || '';
     document.getElementById('result-description').textContent = data.description || '';
     document.getElementById('result-category').textContent = data.category || '未設定';
