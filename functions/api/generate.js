@@ -46,9 +46,9 @@ export async function onRequestPost(context) {
 }
 `;
 
-    // 2. Gemini API リクエスト（v1beta + gemini-2.5-flash / エラー回避のフォールバック対応）
+    // 2. Gemini API リクエスト（指定された gemini-3.6-flash を使用）
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
