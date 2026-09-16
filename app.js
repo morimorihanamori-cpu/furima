@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let currentBase64Image = null;
 
-  // --- 1. 利用回数の管理 (ローカルストレージ) ---
+  // --- 1. 利用回数の管理 ---
   const MAX_FREE_USAGE = 5;
   function getUsageCount() {
     return parseInt(localStorage.getItem("fleamarket_ai_usage_count") || "0", 10);
@@ -30,38 +30,40 @@ document.addEventListener("DOMContentLoaded", () => {
     if (usageBadge) {
       usageBadge.textContent = `本日あと ${remaining} 回利用可能`;
     }
-    if (remaining <= 0) {
+    if (remaining <= 0 && submitBtn) {
       submitBtn.disabled = true;
       submitBtn.textContent = "本日の無料上限に達しました (PROプランへ)";
     }
   }
   updateUsageDisplay();
 
-  // --- 2. 画像アップロード & プレビュー処理 ---
-  uploadArea.addEventListener("click", () => imageInput.click());
+  // --- 2. 画像アップロード & プレビュー処理 (Nullガード付き) ---
+  if (uploadArea && imageInput) {
+    uploadArea.addEventListener("click", () => imageInput.click());
 
-  uploadArea.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    uploadArea.classList.add("dragover");
-  });
+    uploadArea.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      uploadArea.classList.add("dragover");
+    });
 
-  uploadArea.addEventListener("dragleave", () => {
-    uploadArea.classList.remove("dragover");
-  });
+    uploadArea.addEventListener("dragleave", () => {
+      uploadArea.classList.remove("dragover");
+    });
 
-  uploadArea.addEventListener("drop", (e) => {
-    e.preventDefault();
-    uploadArea.classList.remove("dragover");
-    if (e.dataTransfer.files.length > 0) {
-      handleFile(e.dataTransfer.files[0]);
-    }
-  });
+    uploadArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove("dragover");
+      if (e.dataTransfer.files.length > 0) {
+        handleFile(e.dataTransfer.files[0]);
+      }
+    });
 
-  imageInput.addEventListener("change", (e) => {
-    if (e.target.files.length > 0) {
-      handleFile(e.target.files[0]);
-    }
-  });
+    imageInput.addEventListener("change", (e) => {
+      if (e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+      }
+    });
+  }
 
   function handleFile(file) {
     if (!file.type.startsWith("image/")) {
@@ -71,87 +73,83 @@ document.addEventListener("DOMContentLoaded", () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       currentBase64Image = e.target.result;
-      imagePreview.src = currentBase64Image;
-      previewContainer.classList.remove("hidden");
+      if (imagePreview) imagePreview.src = currentBase64Image;
+      if (previewContainer) previewContainer.classList.remove("hidden");
     };
     reader.readAsDataURL(file);
   }
 
   // --- 3. フォーム送信 ＆ AI生成API呼び出し ---
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    if (!currentBase64Image) {
-      showToast("商品を撮影または画像を選択してください。");
-      return;
-    }
-
-    if (getUsageCount() >= MAX_FREE_USAGE) {
-      proModal.classList.remove("hidden");
-      return;
-    }
-
-    // フォーム入力値の収集
-    const info = {
-      brand: document.getElementById("brand")?.value || "",
-      category: document.getElementById("category")?.value || "",
-      size: document.getElementById("size")?.value || "",
-      purchaseTime: document.getElementById("purchase-time")?.value || "",
-      condition: document.getElementById("condition")?.value || "",
-      shipping: document.getElementById("shipping")?.value || "",
-      hashtags: document.getElementById("user-hashtags")?.value || "",
-      notes: document.getElementById("notes")?.value || ""
-    };
-
-    // UI表示の切り替え（ローディング開始）
-    submitBtn.disabled = true;
-    loadingSection.classList.remove("hidden");
-    resultSection.classList.add("hidden");
-
-    try {
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: currentBase64Image, info })
-      });
-
-      const resData = await response.json();
-
-      if (!response.ok || !resData.success) {
-        throw new Error(resData.error || "生成処理に失敗しました。");
+      if (!currentBase64Image) {
+        showToast("商品を撮影または画像を選択してください。");
+        return;
       }
 
-      // 利用回数をカウントアップ
-      const newCount = getUsageCount() + 1;
-      localStorage.setItem("fleamarket_ai_usage_count", newCount.toString());
-      updateUsageDisplay();
-
-      // 結果を画面へ反映
-      renderResults(resData.data);
-      resultSection.classList.remove("hidden");
-      resultSection.scrollIntoView({ behavior: "smooth" });
-
-    } catch (err) {
-      showToast(err.message || "通信エラーが発生しました。");
-    } finally {
-      loadingSection.classList.add("hidden");
-      if (getUsageCount() < MAX_FREE_USAGE) {
-        submitBtn.disabled = false;
+      if (getUsageCount() >= MAX_FREE_USAGE) {
+        if (proModal) proModal.classList.remove("hidden");
+        return;
       }
-    }
-  });
+
+      const info = {
+        brand: document.getElementById("brand")?.value || "",
+        category: document.getElementById("category")?.value || "",
+        size: document.getElementById("size")?.value || "",
+        purchaseTime: document.getElementById("purchase-time")?.value || "",
+        condition: document.getElementById("condition")?.value || "",
+        shipping: document.getElementById("shipping")?.value || "",
+        hashtags: document.getElementById("user-hashtags")?.value || "",
+        notes: document.getElementById("notes")?.value || ""
+      };
+
+      if (submitBtn) submitBtn.disabled = true;
+      if (loadingSection) loadingSection.classList.remove("hidden");
+      if (resultSection) resultSection.classList.add("hidden");
+
+      try {
+        const response = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: currentBase64Image, info })
+        });
+
+        const resData = await response.json();
+
+        if (!response.ok || !resData.success) {
+          throw new Error(resData.error || "生成処理に失敗しました。");
+        }
+
+        const newCount = getUsageCount() + 1;
+        localStorage.setItem("fleamarket_ai_usage_count", newCount.toString());
+        updateUsageDisplay();
+
+        renderResults(resData.data);
+        if (resultSection) {
+          resultSection.classList.remove("hidden");
+          resultSection.scrollIntoView({ behavior: "smooth" });
+        }
+
+      } catch (err) {
+        showToast(err.message || "通信エラーが発生しました。");
+      } finally {
+        if (loadingSection) loadingSection.classList.add("hidden");
+        if (submitBtn && getUsageCount() < MAX_FREE_USAGE) {
+          submitBtn.disabled = false;
+        }
+      }
+    });
+  }
 
   // --- 4. 生成結果のDOM描画 ---
   function renderResults(data) {
-    // カテゴリ
     setText("res-category", data.category || "未分類");
-
-    // タイトル 3案
     setText("title-search", data.titles?.search || "");
     setText("title-click", data.titles?.click || "");
     setText("title-simple", data.titles?.simple || "");
 
-    // 推定価格
     if (data.estimatedPrice) {
       setText("price-rec", data.estimatedPrice.recommended ? `${data.estimatedPrice.recommended.toLocaleString()} 円` : "---");
       setText("price-quick", data.estimatedPrice.quickSell ? `${data.estimatedPrice.quickSell.toLocaleString()}円` : "---");
@@ -160,7 +158,6 @@ document.addEventListener("DOMContentLoaded", () => {
       setText("price-disclaimer", data.estimatedPrice.disclaimer || "");
     }
 
-    // 写真チェック
     const photoCheckContainer = document.getElementById("photo-check-list");
     if (photoCheckContainer && data.photoCheck?.checks) {
       photoCheckContainer.innerHTML = data.photoCheck.checks.map(c => `
@@ -179,23 +176,20 @@ document.addEventListener("DOMContentLoaded", () => {
       suggestionsBox.classList.add("hidden");
     }
 
-    // 商品説明文 & ハッシュタグ
     setText("res-description", data.description || "");
     if (data.hashtags && Array.isArray(data.hashtags)) {
       setText("res-hashtags", data.hashtags.join(" "));
     }
 
-    // 梱包アドバイス
     if (data.packing) {
       setText("res-packing-method", data.packing.method || "");
     }
   }
 
-  // --- 5. クリップボード表示＆通知ヘルパー ---
+  // --- 5. ユーティリティ ---
   window.copyText = function (elementId) {
     const el = document.getElementById(elementId);
     if (!el) return;
-
     const text = el.value || el.innerText;
     navigator.clipboard.writeText(text).then(() => {
       showToast("コピーしました！");
@@ -227,6 +221,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- 6. モーダル表示イベント ---
-  if (openProBtn) openProBtn.addEventListener("click", () => proModal.classList.remove("hidden"));
-  if (closeProBtn) closeProBtn.addEventListener("click", () => proModal.classList.add("hidden"));
+  if (openProBtn && proModal) openProBtn.addEventListener("click", () => proModal.classList.remove("hidden"));
+  if (closeProBtn && proModal) closeProBtn.addEventListener("click", () => proModal.classList.add("hidden"));
 });
