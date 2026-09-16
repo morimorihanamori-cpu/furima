@@ -1,25 +1,19 @@
 document.addEventListener("DOMContentLoaded", () => {
   // DOM要素の取得
-  const uploadArea = document.getElementById("upload-area");
-  const imageInput = document.getElementById("image-input");
-  const previewContainer = document.getElementById("preview-container");
-  const imagePreview = document.getElementById("image-preview");
-  const form = document.getElementById("generate-form");
-  const submitBtn = document.getElementById("submit-btn");
-  const loadingSection = document.getElementById("loading-section");
-  const resultSection = document.getElementById("result-section");
-  const usageBadge = document.getElementById("usage-badge");
-  const toast = document.getElementById("toast");
+  const generateForm = document.getElementById("generateForm");
+  const imageInput = document.getElementById("imageInput");
+  const brandInput = document.getElementById("brandInput");
+  const sizeInput = document.getElementById("sizeInput");
+  const conditionInput = document.getElementById("conditionInput");
+  const submitBtn = document.getElementById("submitBtn");
+  const remainingCountEl = document.getElementById("remainingCount");
+  const errorContainer = document.getElementById("errorContainer");
+  const resultContainer = document.getElementById("resultContainer");
 
-  // PROモーダル関連
-  const proModal = document.getElementById("pro-modal");
-  const openProBtn = document.getElementById("open-pro-btn");
-  const closeProBtn = document.getElementById("close-pro-btn");
-
-  let currentBase64Image = null;
-
-  // --- 1. 利用回数の管理 ---
+  // 利用制限の設定（1日または全体で5回）
   const MAX_FREE_USAGE = 5;
+
+  // --- 1. 残り利用回数の管理 ---
   function getUsageCount() {
     return parseInt(localStorage.getItem("fleamarket_ai_usage_count") || "0", 10);
   }
@@ -27,140 +21,102 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateUsageDisplay() {
     const count = getUsageCount();
     const remaining = Math.max(0, MAX_FREE_USAGE - count);
-    if (usageBadge) {
-      usageBadge.textContent = `本日あと ${remaining} 回利用可能`;
+    if (remainingCountEl) {
+      remainingCountEl.textContent = remaining;
     }
     if (remaining <= 0 && submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.textContent = "本日の無料上限に達しました (PROプランへ)";
+      submitBtn.textContent = "無料上限に達しました（PROプランへ）";
     }
   }
   updateUsageDisplay();
 
-  // --- 2. 画像アップロード & プレビュー処理 (Nullガード付き) ---
-  if (uploadArea && imageInput) {
-    uploadArea.addEventListener("click", () => imageInput.click());
-
-    uploadArea.addEventListener("dragover", (e) => {
+  // --- 2. フォーム送信 ＆ AI生成APIリクエスト ---
+  if (generateForm) {
+    generateForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      uploadArea.classList.add("dragover");
-    });
+      hideError();
 
-    uploadArea.addEventListener("dragleave", () => {
-      uploadArea.classList.remove("dragover");
-    });
-
-    uploadArea.addEventListener("drop", (e) => {
-      e.preventDefault();
-      uploadArea.classList.remove("dragover");
-      if (e.dataTransfer.files.length > 0) {
-        handleFile(e.dataTransfer.files[0]);
-      }
-    });
-
-    imageInput.addEventListener("change", (e) => {
-      if (e.target.files.length > 0) {
-        handleFile(e.target.files[0]);
-      }
-    });
-  }
-
-  function handleFile(file) {
-    if (!file.type.startsWith("image/")) {
-      showToast("画像ファイルを選択してください。");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      currentBase64Image = e.target.result;
-      if (imagePreview) imagePreview.src = currentBase64Image;
-      if (previewContainer) previewContainer.classList.remove("hidden");
-    };
-    reader.readAsDataURL(file);
-  }
-
-  // --- 3. フォーム送信 ＆ AI生成API呼び出し ---
-  if (form) {
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      if (!currentBase64Image) {
-        showToast("商品を撮影または画像を選択してください。");
+      const file = imageInput?.files[0];
+      if (!file) {
+        showError("商品写真を選択してください。");
         return;
       }
 
       if (getUsageCount() >= MAX_FREE_USAGE) {
-        if (proModal) proModal.classList.remove("hidden");
+        window.openProModal();
         return;
       }
 
-      const info = {
-        brand: document.getElementById("brand")?.value || "",
-        category: document.getElementById("category")?.value || "",
-        size: document.getElementById("size")?.value || "",
-        purchaseTime: document.getElementById("purchase-time")?.value || "",
-        condition: document.getElementById("condition")?.value || "",
-        shipping: document.getElementById("shipping")?.value || "",
-        hashtags: document.getElementById("user-hashtags")?.value || "",
-        notes: document.getElementById("notes")?.value || ""
-      };
-
-      if (submitBtn) submitBtn.disabled = true;
-      if (loadingSection) loadingSection.classList.remove("hidden");
-      if (resultSection) resultSection.classList.add("hidden");
+      // ローディング表示設定
+      setLoading(true);
 
       try {
+        // 画像をBase64文字列に変換
+        const base64Image = await convertFileToBase64(file);
+
+        // 補足情報の収集
+        const info = {
+          brand: brandInput?.value.trim() || "",
+          size: sizeInput?.value.trim() || "",
+          condition: conditionInput?.value.trim() || ""
+        };
+
+        // Cloudflare Function (API) へ送信
         const response = await fetch("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: currentBase64Image, info })
+          body: JSON.stringify({ image: base64Image, info })
         });
 
         const resData = await response.json();
 
         if (!response.ok || !resData.success) {
-          throw new Error(resData.error || "生成処理に失敗しました。");
+          throw new Error(resData.error || "AIの処理中にエラーが発生しました。");
         }
 
+        // 使用回数を更新
         const newCount = getUsageCount() + 1;
         localStorage.setItem("fleamarket_ai_usage_count", newCount.toString());
         updateUsageDisplay();
 
+        // 結果画面の描画
         renderResults(resData.data);
-        if (resultSection) {
-          resultSection.classList.remove("hidden");
-          resultSection.scrollIntoView({ behavior: "smooth" });
+        if (resultContainer) {
+          resultContainer.classList.remove("hidden");
+          resultContainer.scrollIntoView({ behavior: "smooth" });
         }
 
       } catch (err) {
-        showToast(err.message || "通信エラーが発生しました。");
+        showError(err.message || "通信エラーが発生しました。時間をおいて再度お試しください。");
       } finally {
-        if (loadingSection) loadingSection.classList.add("hidden");
-        if (submitBtn && getUsageCount() < MAX_FREE_USAGE) {
-          submitBtn.disabled = false;
-        }
+        setLoading(false);
       }
     });
   }
 
-  // --- 4. 生成結果のDOM描画 ---
+  // --- 3. 生成結果の表示処理 ---
   function renderResults(data) {
-    setText("res-category", data.category || "未分類");
-    setText("title-search", data.titles?.search || "");
-    setText("title-click", data.titles?.click || "");
-    setText("title-simple", data.titles?.simple || "");
-
+    // 1. 推定価格
     if (data.estimatedPrice) {
-      setText("price-rec", data.estimatedPrice.recommended ? `${data.estimatedPrice.recommended.toLocaleString()} 円` : "---");
-      setText("price-quick", data.estimatedPrice.quickSell ? `${data.estimatedPrice.quickSell.toLocaleString()}円` : "---");
-      setText("price-std", data.estimatedPrice.standard ? `${data.estimatedPrice.standard.toLocaleString()}円` : "---");
-      setText("price-high", data.estimatedPrice.high ? `${data.estimatedPrice.high.toLocaleString()}円` : "---");
-      setText("price-disclaimer", data.estimatedPrice.disclaimer || "");
+      setText("priceRecommended", data.estimatedPrice.recommended ? data.estimatedPrice.recommended.toLocaleString() : "0");
+      setText("priceRange", data.estimatedPrice.range || "-");
+      setText("priceQuick", data.estimatedPrice.quickSell ? data.estimatedPrice.quickSell.toLocaleString() : "0");
+      setText("priceStandard", data.estimatedPrice.standard ? data.estimatedPrice.standard.toLocaleString() : "0");
+      setText("priceHigh", data.estimatedPrice.high ? data.estimatedPrice.high.toLocaleString() : "0");
     }
 
-    const photoCheckContainer = document.getElementById("photo-check-list");
-    if (photoCheckContainer && data.photoCheck?.checks) {
-      photoCheckContainer.innerHTML = data.photoCheck.checks.map(c => `
+    // 2. タイトル3案
+    if (data.titles) {
+      setText("titleSearch", data.titles.search || "");
+      setText("titleClick", data.titles.click || "");
+      setText("titleSimple", data.titles.simple || "");
+    }
+
+    // 3. 写真チェック
+    const photoCheckList = document.getElementById("photoCheckList");
+    if (photoCheckList && data.photoCheck?.checks) {
+      photoCheckList.innerHTML = data.photoCheck.checks.map(c => `
         <div class="check-item">
           <span>${escapeHtml(c.item)}</span>
           <span class="${c.status === "OK" ? "status-ok" : "status-warn"}">${escapeHtml(c.status)}</span>
@@ -168,43 +124,94 @@ document.addEventListener("DOMContentLoaded", () => {
       `).join("");
     }
 
-    const suggestionsBox = document.getElementById("photo-suggestions");
-    if (suggestionsBox && data.photoCheck?.suggestions?.length > 0) {
-      suggestionsBox.innerHTML = `<strong>💡 撮影のアドバイス:</strong><ul>${data.photoCheck.suggestions.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>`;
-      suggestionsBox.classList.remove("hidden");
-    } else if (suggestionsBox) {
-      suggestionsBox.classList.add("hidden");
+    const photoSuggestions = document.getElementById("photoSuggestions");
+    if (photoSuggestions && data.photoCheck?.suggestions) {
+      photoSuggestions.innerHTML = data.photoCheck.suggestions
+        .map(s => `<li>${escapeHtml(s)}</li>`)
+        .join("");
     }
 
-    setText("res-description", data.description || "");
+    // 4. 商品説明文
+    setText("descriptionText", data.description || "");
+
+    // 5. ハッシュタグ
     if (data.hashtags && Array.isArray(data.hashtags)) {
-      setText("res-hashtags", data.hashtags.join(" "));
+      setText("hashtagText", data.hashtags.join(" "));
     }
 
+    // 6. 梱包方法 ＆ アフィリエイト枠
     if (data.packing) {
-      setText("res-packing-method", data.packing.method || "");
+      setText("packingMethod", data.packing.method || "");
+      renderAffiliateLinks(data.packing.type);
     }
   }
 
-  // --- 5. ユーティリティ ---
-  window.copyText = function (elementId) {
-    const el = document.getElementById(elementId);
-    if (!el) return;
-    const text = el.value || el.innerText;
-    navigator.clipboard.writeText(text).then(() => {
-      showToast("コピーしました！");
-    }).catch(() => {
-      showToast("コピーに失敗しました。");
-    });
-  };
+  // --- 4. アフィリエイトおすすめ資材の描画 ---
+  function renderAffiliateLinks(packingType) {
+    const affiliateList = document.getElementById("affiliateList");
+    if (!affiliateList) return;
 
-  function showToast(message) {
-    if (!toast) return;
-    toast.textContent = message;
-    toast.classList.remove("hidden");
-    setTimeout(() => {
-      toast.classList.add("hidden");
-    }, 3000);
+    // タイプ別のおすすめ梱包資材定義（Amazon/楽天などのアフィリエイトURLに差し替え可能）
+    const itemsMap = {
+      clothes: [
+        { name: "OPP袋 A4サイズ（衣類用防水袋）", link: "#", btnText: "Amazonで探す" },
+        { name: "宅配袋 破れにくい強粘着テープ付", link: "#", btnText: "楽天で探す" }
+      ],
+      fragile: [
+        { name: "エアクッション（プチプチロール）", link: "#", btnText: "Amazonで探す" },
+        { name: "ダンボール箱 60サイズ（強化タイプ）", link: "#", btnText: "楽天で探す" }
+      ],
+      book: [
+        { name: "クッション封筒 ネコポス/ゆうパケット対応", link: "#", btnText: "Amazonで探す" }
+      ],
+      default: [
+        { name: "フリマ用 梱包資材スターターセット", link: "#", btnText: "Amazonで探す" },
+        { name: "厚さ測定定規（メルカリ・ラクマ対応）", link: "#", btnText: "楽天で探す" }
+      ]
+    };
+
+    const items = itemsMap[packingType] || itemsMap.default;
+    affiliateList.innerHTML = items.map(item => `
+      <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="affiliate-card-item">
+        <span>📦 ${escapeHtml(item.name)}</span>
+        <span class="affiliate-btn">${escapeHtml(item.btnText)} ➔</span>
+      </a>
+    `).join("");
+  }
+
+  // --- 5. ユーティリティ関数 ---
+  function convertFileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function setLoading(isLoading) {
+    if (!submitBtn) return;
+    if (isLoading) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "🤖 AIが分析中...";
+    } else {
+      submitBtn.disabled = getUsageCount() >= MAX_FREE_USAGE;
+      submitBtn.textContent = getUsageCount() >= MAX_FREE_USAGE 
+        ? "無料上限に達しました（PROプランへ）" 
+        : "AIで出品情報をつくる";
+    }
+  }
+
+  function showError(msg) {
+    if (!errorContainer) return;
+    errorContainer.textContent = msg;
+    errorContainer.classList.remove("hidden");
+  }
+
+  function hideError() {
+    if (!errorContainer) return;
+    errorContainer.textContent = "";
+    errorContainer.classList.add("hidden");
   }
 
   function setText(id, text) {
@@ -219,8 +226,46 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
   }
-
-  // --- 6. モーダル表示イベント ---
-  if (openProBtn && proModal) openProBtn.addEventListener("click", () => proModal.classList.remove("hidden"));
-  if (closeProBtn && proModal) closeProBtn.addEventListener("click", () => proModal.classList.add("hidden"));
 });
+
+// --- 6. HTMLの onclick 属性から呼び出されるグローバル関数 ---
+window.copyText = function (elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+
+  const text = el.value || el.innerText || el.textContent;
+  if (!text) return;
+
+  navigator.clipboard.writeText(text).then(() => {
+    showToast("コピーしました！");
+  }).catch(() => {
+    showToast("コピーに失敗しました。");
+  });
+};
+
+window.openProModal = function () {
+  const modal = document.getElementById("proModal");
+  if (modal) modal.classList.remove("hidden");
+};
+
+window.closeProModal = function () {
+  const modal = document.getElementById("proModal");
+  if (modal) modal.classList.add("hidden");
+};
+
+// トースト通知の作成・表示
+function showToast(message) {
+  let toast = document.getElementById("toastContainer");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toastContainer";
+    toast.className = "toast";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+  
+  setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 2500);
+}
