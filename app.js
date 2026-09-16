@@ -1,97 +1,172 @@
-export async function onRequestPost(context) {
-const { request, env } = context;
+document.addEventListener('DOMContentLoaded', () => {
+  const fileInput = document.getElementById('file-input');
+  const dropZone = document.getElementById('drop-zone');
+  const uploadPlaceholder = document.getElementById('upload-placeholder');
+  const previewContainer = document.getElementById('preview-container');
+  const imagePreview = document.getElementById('image-preview');
+  const changeImageBtn = document.getElementById('change-image-btn');
+  const generateBtn = document.getElementById('generate-btn');
 
-try {
-// 1. APIキーの設定チェック
-if (!env.GEMINI_API_KEY) {
-return new Response(
-JSON.stringify({ error: "GEMINI_API_KEY が設定されていません。Pagesの設定画面を確認してください。" }),
-{ status: 500, headers: { "Content-Type": "application/json" } }
-);
-}
+  const inputSection = document.getElementById('input-section');
+  const loadingSection = document.getElementById('loading-section');
+  const resultSection = document.getElementById('result-section');
 
-const { image, info } = await request.json();
+  let base64Image = '';
 
-if (!image) {
-return new Response(
-JSON.stringify({ error: "画像データが送信されていません。" }),
-{ status: 400, headers: { "Content-Type": "application/json" } }
-);
-}
+  // ドラッグ＆ドロップ関連イベント
+  dropZone.addEventListener('click', () => fileInput.click());
 
-const prompt = `
-あなたはフリマアプリ（メルカリ・ラクマ・Yahoo!フリマ等）の優秀な出品サポートAIです。
-画像と以下の入力情報を分析し、購入意欲を高める魅力的な出品データを作成してください。
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
 
-【ユーザー入力情報】
-- ブランド/メーカー: ${info?.brand || "画像から判断"}
-- カテゴリ: ${info?.category || "画像から判断"}
-- サイズ: ${info?.size || "不明"}
-- 購入時期: ${info?.purchaseTime || "不明"}
-- 商品の状態: ${info?.condition || "目立った傷や汚れなし"}
-- 発送方法: ${info?.shipping || "未定（迅速・丁寧に梱包して発送します）"}
-- SEO・ハッシュタグ要望: ${info?.hashtags || "指定なし"}
-- その他備考: ${info?.notes || "なし"}
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+  });
 
-【出力フォーマット】
-必ず以下のJSON形式のみで出力してください（Markdownのコードブロックを含めないでください）。
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  });
 
-{
- "title": "40文字以内の検索されやすい商品タイトル",
- "description": "商品説明文（状態、サイズ、発送方法、注意事項などを丁寧かつ読みやすくまとめた文章）",
- "category": "推定されるカテゴリ名",
- "features": ["特徴1", "特徴2", "特徴3"],
- "keywords": ["検索用キーワード1", "キーワード2", "キーワード3"],
- "hashtags": ["#ハッシュタグ1", "#ハッシュタグ2", "#ハッシュタグ3"]
-}
-`;
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      handleFile(e.target.files[0]);
+    }
+  });
 
-    // 2. Gemini API リクエスト（v1beta + gemini-2.5-flash / エラー回避のフォールバック対応）
-    // 2. Gemini API リクエスト（指定された gemini-3.6-flash を使用）
-const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${env.GEMINI_API_KEY}`,
-{
-method: "POST",
-headers: { "Content-Type": "application/json" },
-body: JSON.stringify({
-contents: [
-{
-role: "user",
-parts: [
-{ text: prompt },
-{
-inline_data: {
-mime_type: "image/jpeg",
-data: image.split(",")[1],
-},
-},
-],
-},
-],
-generationConfig: {
-response_mime_type: "application/json",
-},
-}),
-}
-);
+  changeImageBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    fileInput.click();
+  });
 
-const data = await response.json();
+  function handleFile(file) {
+    if (!file.type.startsWith('image/')) {
+      alert('画像ファイルを選択してください。');
+      return;
+    }
 
-if (!response.ok) {
-throw new Error(data.error?.message || "Gemini API エラーが発生しました。");
-}
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      base64Image = e.target.result;
+      imagePreview.src = base64Image;
+      uploadPlaceholder.classList.add('hidden');
+      previewContainer.classList.remove('hidden');
+      generateBtn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+  }
 
-const resultText = data.candidates[0].content.parts[0].text;
+  // AI生成リクエスト処理
+  generateBtn.addEventListener('click', async () => {
+    if (!base64Image) return;
 
-return new Response(resultText, {
-status: 200,
-headers: { "Content-Type": "application/json" },
+    inputSection.classList.add('hidden');
+    loadingSection.classList.remove('hidden');
+
+    const info = {
+      brand: document.getElementById('brand').value,
+      category: document.getElementById('category').value,
+      size: document.getElementById('size').value,
+      purchaseTime: document.getElementById('purchase-time').value,
+      condition: document.getElementById('condition').value,
+      shipping: document.getElementById('shipping').value,
+      hashtags: document.getElementById('hashtags').value,
+      notes: document.getElementById('notes').value
+    };
+
+    try {
+      // APIパスを相対パス (/api/generate) に変更してCORSを完全回避
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ image: base64Image, info })
+      });
+
+      if (!response.ok) {
+        throw new Error('生成に失敗しました。');
+      }
+
+      const data = await response.json();
+      displayResult(data);
+
+      loadingSection.classList.add('hidden');
+      resultSection.classList.remove('hidden');
+
+    } catch (error) {
+      alert(error.message || 'エラーが発生しました。もう一度お試しください。');
+      loadingSection.classList.add('hidden');
+      inputSection.classList.remove('hidden');
+    }
+  });
+
+  // 生成結果の表示処理
+  function displayResult(data) {
+    document.getElementById('result-title').textContent = data.title || '';
+    document.getElementById('result-description').textContent = data.description || '';
+    document.getElementById('result-category').textContent = data.category || '未設定';
+
+    const featuresList = document.getElementById('result-features');
+    featuresList.innerHTML = '';
+    (data.features || []).forEach(feat => {
+      const li = document.createElement('li');
+      li.textContent = feat;
+      featuresList.appendChild(li);
+    });
+
+    const renderTags = (elementId, tags) => {
+      const container = document.getElementById(elementId);
+      container.innerHTML = '';
+      (tags || []).forEach(tag => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.textContent = tag;
+        container.appendChild(span);
+      });
+    };
+
+    renderTags('result-keywords', data.keywords);
+    renderTags('result-hashtags', data.hashtags);
+  }
+
+  // もう一度生成するボタン
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    resultSection.classList.add('hidden');
+    inputSection.classList.remove('hidden');
+  });
+
+  // クリップボードコピー処理
+  const toast = document.getElementById('toast');
+  function showToast(message = 'コピーしました！') {
+    toast.textContent = message;
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 2000);
+  }
+
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) {
+        navigator.clipboard.writeText(targetEl.textContent);
+        showToast();
+      }
+    });
+  });
+
+  document.getElementById('copy-all-btn').addEventListener('click', () => {
+    const title = document.getElementById('result-title').textContent;
+    const desc = document.getElementById('result-description').textContent;
+    const hashtags = Array.from(document.querySelectorAll('#result-hashtags .tag')).map(t => t.textContent).join(' ');
+
+    const fullText = `${title}\n\n${desc}\n\n${hashtags}`;
+    navigator.clipboard.writeText(fullText);
+    showToast('全文をコピーしました！');
+  });
 });
-} catch (error) {
-return new Response(
-JSON.stringify({ error: error.message }),
-{ status: 500, headers: { "Content-Type": "application/json" } }
-);
-}
-}
