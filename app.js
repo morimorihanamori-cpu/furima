@@ -1,3 +1,14 @@
+// ==========================================
+// アフィリエイトURL設定
+// 後からURLを変更する場合は、以下の文字列を編集してください。
+// URLが未設定（""）の場合は「リンク未設定」と表示されます。
+// ==========================================
+const AFFILIATE_LINKS = {
+  packing_opp: "", // ① 梱包用OPP袋 のアフィリエイトURL
+  packing_bag: "", // ② 宅配ビニール袋 のアフィリエイトURL
+  photo_box: ""    // ③ 商品撮影ボックス のアフィリエイトURL
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   const fileInput = document.getElementById('file-input');
   const dropZone = document.getElementById('drop-zone');
@@ -12,6 +23,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultSection = document.getElementById('result-section');
 
   let base64Image = '';
+
+  // アフィリエイトリンクの動的反映処理
+  function setupAffiliateLinks() {
+    const items = [
+      { id: 'affiliate-btn-1', url: AFFILIATE_LINKS.packing_opp },
+      { id: 'affiliate-btn-2', url: AFFILIATE_LINKS.packing_bag },
+      { id: 'affiliate-btn-3', url: AFFILIATE_LINKS.photo_box }
+    ];
+
+    items.forEach(item => {
+      const btnEl = document.getElementById(item.id);
+      if (!btnEl) return;
+
+      if (item.url && item.url.trim() !== '') {
+        btnEl.href = item.url;
+        btnEl.textContent = '詳しく見る';
+        btnEl.classList.remove('disabled');
+        btnEl.removeAttribute('tabindex');
+        btnEl.removeAttribute('aria-disabled');
+      } else {
+        btnEl.href = 'javascript:void(0);';
+        btnEl.textContent = 'リンク未設定';
+        btnEl.classList.add('disabled');
+        btnEl.setAttribute('tabindex', '-1');
+        btnEl.setAttribute('aria-disabled', 'true');
+      }
+    });
+  }
+
+  // 初期ロード時にアフィリエイトリンクを設定
+  setupAffiliateLinks();
 
   // ドラッグ＆ドロップ関連イベント
   dropZone.addEventListener('click', () => fileInput.click());
