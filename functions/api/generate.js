@@ -1,78 +1,103 @@
-export async function onRequestPost(context) {
-  try {
-    const { request, env } = context;
-    const body = await request.json();
-    const { image, mimeType, userInput } = body;
+export default {
+  async fetch(request, env) {
+    // 共通CORSヘッダー定義
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    };
 
-    const apiKey = env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "APIキーが設定されていません。" }), { status: 500 });
+    // プリフライトリクエスト（OPTIONS）の処理
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        headers: corsHeaders,
+      });
     }
 
-    // AIへの安全かつ厳格な指示文
-    const prompt = `
-あなたはフリマアプリ（メルカリ・ラクマ・Yahoo!フリマなど）のプロ出品者です。
-添付された商品写真と出品者からの追加情報をもとに、出品用のタイトル・商品説明文・カテゴリ・特徴・検索キーワード・ハッシュタグを作成してください。
+    if (request.method !== "POST") {
+      return new Response("Method Not Allowed", { 
+        status: 405,
+        headers: corsHeaders
+      });
+    }
 
-【出品者からの追加情報】
-・ブランド: ${userInput.brand || "指定なし"}
-・サイズ: ${userInput.size || "指定なし"}
-・購入時期: ${userInput.purchaseTime || "指定なし"}
-・商品の状態: ${userInput.condition || "指定なし"}
-・その他メモ: ${userInput.notes || "特になし"}
+    try {
+      const { image, info } = await request.json();
 
-【厳格な遵守ルール】
-1. 写真および出品者情報から確実に確認できる事実のみに基づいて記述してください。
-2. 写真だけでは判断できない情報（新品か中古か、着用回数、購入価格、傷汚れの有無など）は絶対に捏造しないでください。
-3. 判断できない項目は「商品の状態については写真をご確認ください」等の安全な表現にしてください。
-4. 自然で丁寧な日本語（「ご覧いただきありがとうございます」等）で記述してください。
+      const prompt = `
+あなたはフリマアプリ（メルカリ・ラクマ・Yahoo!フリマ等）の優秀な出品サポートAIです。
+画像と以下の入力情報を分析し、購入意欲を高める魅力的な出品データを作成してください。
 
-必ず以下の構成のJSONフォーマットのみを返してください（Markdownの記法や装飾コードブロックは含めないでください）。
+【ユーザー入力情報】
+- ブランド/メーカー: ${info?.brand || "画像から判断"}
+- カテゴリ: ${info?.category || "画像から判断"}
+- サイズ: ${info?.size || "不明"}
+- 購入時期: ${info?.purchaseTime || "不明"}
+- 商品の状態: ${info?.condition || "目立った傷や汚れなし"}
+- 発送方法: ${info?.shipping || "未定（迅速・丁寧に梱包して発送します）"}
+- SEO・ハッシュタグ要望: ${info?.hashtags || "指定なし"}
+- その他備考: ${info?.notes || "なし"}
+
+【出力フォーマット】
+必ず以下のJSON形式のみで出力してください（Markdownのコードブロックを含めないでください）。
 
 {
-  "title": "ブランド名・アイテム名・特徴を含む魅力的な商品タイトル",
-  "description": "そのままフリマアプリに貼り付けられる丁寧な商品説明文",
-  "category": "大カテゴリ > 中カテゴリ > 小カテゴリ",
+  "title": "40文字以内の検索されやすい商品タイトル",
+  "description": "商品説明文（状態、サイズ、発送方法、注意事項などを丁寧かつ読みやすくまとめた文章）",
+  "category": "推定されるカテゴリ名",
   "features": ["特徴1", "特徴2", "特徴3"],
-  "keywords": ["キーワード1", "キーワード2", "キーワード3"],
-  "hashtags": ["#タグ1", "#タグ2", "#タグ3"]
+  "keywords": ["検索用キーワード1", "キーワード2", "キーワード3"],
+  "hashtags": ["#ハッシュタグ1", "#ハッシュタグ2", "#ハッシュタグ3"]
 }
 `;
 
-    // Gemini APIリクエストの作成（最新モデル指定）
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
-    
-    const apiPayload = {
-      contents: [{
-        parts: [
-          { text: prompt },
-          { inline_data: { mime_type: mimeType, data: image } }
-        ]
-      }],
-      generationConfig: {
-        response_mime_type: "application/json"
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: prompt },
+                {
+                  inline_data: {
+                    mime_type: "image/jpeg",
+                    data: image.split(",")[1]
+                  }
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            response_mime_type: "application/json"
+          }
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || "Gemini API Error");
       }
-    };
 
-    const apiResponse = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(apiPayload)
-    });
+      const resultText = data.candidates[0].content.parts[0].text;
 
-    if (!apiResponse.ok) {
-      const errText = await apiResponse.text();
-      return new Response(JSON.stringify({ error: "Gemini API Error: " + errText }), { status: 500 });
+      return new Response(resultText, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
+      });
+
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
+      });
     }
-
-    const responseData = await apiResponse.json();
-    const resultText = responseData.candidates[0].content.parts[0].text;
-
-    return new Response(resultText, {
-      headers: { "Content-Type": "application/json; charset=utf-8" }
-    });
-
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-  }
-}
+  },
+};
