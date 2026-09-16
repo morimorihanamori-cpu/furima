@@ -274,88 +274,85 @@ body {
 }
 
 @media (max-width: 600px) {
-  .grid-2col {
   .form-grid, .grid-2col {
-grid-template-columns: 1fr;
-}
+    grid-template-columns: 1fr;
+  }
   .form-item.full-width {
     grid-column: span 1;
   }
 }
 
 .feature-list {
-padding-left: 20px;
-font-size: 0.95rem;
+  padding-left: 20px;
+  font-size: 0.95rem;
 }
 
 .tags-container {
-display: flex;
-flex-wrap: wrap;
-gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .tag {
-background: #eff6ff;
-color: var(--primary);
-padding: 4px 10px;
-border-radius: 16px;
-font-size: 0.85rem;
-font-weight: 600;
+  background: #eff6ff;
+  color: var(--primary);
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
-/* 通知トースト */
 /* --- 通知トースト --- */
 .toast {
-position: fixed;
-bottom: 24px;
-left: 50%;
-transform: translateX(-50%);
-background-color: rgba(15, 23, 42, 0.9);
-color: white;
-padding: 10px 20px;
-border-radius: 20px;
-font-size: 0.9rem;
-font-weight: bold;
-z-index: 1000;
-transition: opacity 0.3s ease;
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(15, 23, 42, 0.9);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  z-index: 1000;
+  transition: opacity 0.3s ease;
 }
 
 .hidden {
-display: none !important;
+  display: none !important;
 }
 
-/* --- アフィリエイト枠・バナー表示強制用スタイル --- */
 /* --- アフィリエイト枠・バナー表示調整 --- */
 .affiliate-card {
-margin-top: 24px;
-padding: 20px;
-background: #f8f9fa;
-border: 1px solid #e2e8f0;
-border-radius: 12px;
-text-align: center;
+  margin-top: 24px;
+  padding: 20px;
+  background: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  text-align: center;
 }
 
 .affiliate-card h3 {
-font-size: 1rem;
-color: #333;
-margin-bottom: 12px;
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 12px;
 }
 
 .affiliate-banner-placeholder {
-display: block !important;
-width: 100%;
-margin: 0 auto;
-text-align: center;
+  display: block !important;
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .affiliate-banner-placeholder a {
-display: inline-block !important;
+  display: inline-block !important;
 }
 
 .affiliate-banner-placeholder img {
-max-width: 100%;
-height: auto;
-display: inline-block !important;
-visibility: visible !important;
-opacity: 1 !important;
+  max-width: 100%;
+  height: auto;
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
