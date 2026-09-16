@@ -357,7 +357,7 @@ body {
   opacity: 1 !important;
 }
 
-/* --- フリマ出品におすすめ商品セクション（追加） --- */
+/* --- フリマ出品におすすめ商品セクション --- */
 .recommend-section {
   margin-top: 20px;
 }
@@ -410,4 +410,68 @@ body {
   text-align: center;
   text-decoration: none;
   display: block;
+}
+
+/* --- AI推定価格表示（追加） --- */
+.price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+  .price-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.price-item {
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+
+.price-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.price-val {
+  font-size: 1.15rem;
+  font-weight: bold;
+  color: #1e293b;
+}
+
+.price-recommended-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.price-recommended-label {
+  font-weight: bold;
+  color: var(--primary);
+  font-size: 0.95rem;
+}
+
+.price-recommended-val {
+  font-weight: bold;
+  color: var(--primary);
+  font-size: 1.4rem;
+}
+
+.price-disclaimer {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 8px;
 }
