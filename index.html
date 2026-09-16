@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>フリマAIメーカー | 無料でフリマ出品文を自動生成</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="container">
+      <h1 class="logo">フリマAIメーカー</h1>
+      <p class="subtitle">写真をアップロードするだけで、フリマ出品文をAIが作成</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 入力フォーム画面 -->
+    <section id="input-section" class="card">
+      <div class="upload-area" id="drop-zone">
+        <input type="file" id="file-input" accept="image/*" hidden>
+        <div id="upload-placeholder">
+          <span class="icon">📷</span>
+          <p class="upload-text">商品写真をアップロード</p>
+          <p class="upload-subtext">またはドラッグ＆ドロップ</p>
+        </div>
+        <div id="preview-container" class="hidden">
+          <img id="image-preview" src="" alt="プレビュー">
+          <button type="button" id="change-image-btn" class="btn-secondary btn-sm">写真を変更</button>
+        </div>
+      </div>
+
+      <div class="form-group-title">
+        <h3>商品について分かること（任意）</h3>
+        <p>分かる範囲で入力すると、より精度の高い文章が作成されます。</p>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-item">
+          <label for="brand">ブランド・メーカー名</label>
+          <input type="text" id="brand" placeholder="例：NIKE, ユニクロ">
+        </div>
+        <div class="form-item">
+          <label for="size">サイズ</label>
+          <input type="text" id="size" placeholder="例：M, 24.5cm">
+        </div>
+        <div class="form-item">
+          <label for="purchase-time">購入時期</label>
+          <input type="text" id="purchase-time" placeholder="例：半年前, 2024年頃">
+        </div>
+        <div class="form-item">
+          <label for="condition">商品の状態</label>
+          <input type="text" id="condition" placeholder="例：目立った傷なし, 新品未使用">
+        </div>
+      </div>
+
+      <div class="form-item full-width">
+        <label for="notes">その他伝えたいこと</label>
+        <textarea id="notes" rows="3" placeholder="例：即購入OKです。定価は15,000円でした。"></textarea>
+      </div>
+
+      <button id="generate-btn" class="btn-primary" disabled>出品文を作成する</button>
+    </section>
+
+    <!-- ローディング表示 -->
+    <section id="loading-section" class="card hidden">
+      <div class="spinner"></div>
+      <p class="loading-text">AIが画像を解析して出品文を作成中...</p>
+      <p class="loading-subtext">数秒〜十数秒かかります。そのままお待ちください。</p>
+    </section>
+
+    <!-- 生成結果画面 -->
+    <section id="result-section" class="hidden">
+      <div class="action-bar-top">
+        <button id="copy-all-btn" class="btn-primary btn-lg">✨ 出品全文をまとめてコピー</button>
+        <button id="reset-btn" class="btn-secondary">🔄 もう一度生成する</button>
+      </div>
+
+      <!-- 商品タイトル -->
+      <div class="result-card">
+        <div class="card-header">
+          <h2>■ 商品タイトル</h2>
+          <button class="copy-btn btn-secondary btn-sm" data-target="result-title">タイトルだけコピー</button>
+        </div>
+        <div class="card-body">
+          <p id="result-title" class="result-text bold"></p>
+        </div>
+      </div>
+
+      <!-- 商品説明 -->
+      <div class="result-card">
+        <div class="card-header">
+          <h2>■ 商品説明文</h2>
+          <button class="copy-btn btn-secondary btn-sm" data-target="result-description">説明文だけコピー</button>
+        </div>
+        <div class="card-body">
+          <div id="result-description" class="result-text multiline"></div>
+        </div>
+      </div>
+
+      <!-- カテゴリ & 特徴 -->
+      <div class="grid-2col">
+        <div class="result-card">
+          <div class="card-header">
+            <h2>■ 商品カテゴリ</h2>
+          </div>
+          <div class="card-body">
+            <p id="result-category" class="result-text"></p>
+          </div>
+        </div>
+
+        <div class="result-card">
+          <div class="card-header">
+            <h2>■ 商品の特徴</h2>
+          </div>
+          <div class="card-body">
+            <ul id="result-features" class="feature-list"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 検索キーワード & ハッシュタグ -->
+      <div class="result-card">
+        <div class="card-header">
+          <h2>■ 検索キーワード</h2>
+          <button class="copy-btn btn-secondary btn-sm" data-target="result-keywords">キーワードだけコピー</button>
+        </div>
+        <div class="card-body">
+          <div id="result-keywords" class="tags-container"></div>
+        </div>
+      </div>
+
+      <div class="result-card">
+        <div class="card-header">
+          <h2>■ ハッシュタグ</h2>
+          <button class="copy-btn btn-secondary btn-sm" data-target="result-hashtags">ハッシュタグだけコピー</button>
+        </div>
+        <div class="card-body">
+          <div id="result-hashtags" class="tags-container"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- コピー通知ポップアップ -->
+  <div id="toast" class="toast hidden">コピーしました！</div>
+
+  <script src="app.js"></script>
+</body>
+</html>
