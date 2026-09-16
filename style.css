@@ -475,3 +475,39 @@ body {
   color: #94a3b8;
   margin-top: 8px;
 }
+
+/* （前略：既存のスタイルは変更せずそのまま維持） */
+
+/* --- アフィリエイト枠・PR表示追加スタイル（最末尾に追記） --- */
+.recommend-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.recommend-header .recommend-title {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.pr-label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-weight: 500;
+}
+
+.recommend-btn.disabled {
+  background-color: #f1f5f9;
+  color: #94a3b8;
+  border-color: #cbd5e1;
+  cursor: not-allowed;
+  pointer-events: none;
+  text-decoration: none;
+}
