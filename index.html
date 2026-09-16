@@ -1,173 +1,345 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>フリマAIメーカー | 写真を入れるだけ出品時短</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google-site-verification" content="Ga1qum9He6TRMgPS-TMqxYprTwxIKXN4H6u_1xWQIio" />
+<title>フリマAIメーカー | 無料でフリマ出品文を自動生成</title>
+<link rel="stylesheet" href="style.css">
+  <style>
+    /* アフィリエイト枠用のスタイル */
+    .affiliate-card {
+      background: #f8f9fa;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 24px;
+      text-align: center;
+    }
+    .affiliate-card h3 {
+      font-size: 1rem;
+      color: #333;
+      margin-bottom: 12px;
+    }
+    .affiliate-banner-placeholder {
+      background: #fff;
+      border: 2px dashed #cbd5e1;
+      padding: 20px;
+      border-radius: 8px;
+      color: #64748b;
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- トップヘッダー ＆ 残り回数表示 -->
-  <header class="header">
-    <div class="logo">フリマAIメーカー</div>
-    <div class="usage-badge">
-      今月の残り生成回数: <strong id="remainingCount">5</strong>回
-    </div>
-  </header>
+<header class="header">
+<div class="container">
+<h1 class="logo">フリマAIメーカー</h1>
+<p class="subtitle">写真をアップロードするだけで、フリマ出品文をAIが作成</p>
+</div>
+</header>
 
-  <!-- ファーストビュー（TikTok/Reelsユーザー向け明確なコピー） -->
-  <section class="hero">
-    <h1>写真を入れるだけ。<br>フリマの出品作業をAIで時短。</h1>
-    <p>タイトル・商品説明・推定価格・ハッシュタグまでまとめて作成</p>
-    <a href="#upload-section" class="cta-btn">無料で使ってみる</a>
-  </section>
-
-  <main class="container" id="upload-section">
-    <!-- 入力フォーム -->
-    <form id="generateForm" class="card">
-      <div class="form-group">
-        <label>商品写真（必須）</label>
-        <input type="file" id="imageInput" accept="image/*" required>
-      </div>
-
-      <div class="form-group">
-        <label>補足情報（任意）</label>
-        <input type="text" id="brandInput" placeholder="ブランド・メーカー">
-        <input type="text" id="sizeInput" placeholder="サイズ">
-        <input type="text" id="conditionInput" placeholder="商品の状態（例: 目立った傷なし）">
-      </div>
-
-      <button type="submit" id="submitBtn" class="btn-primary">AIで出品情報をつくる</button>
-    </form>
-
-    <div id="errorContainer" class="error-box hidden"></div>
-
-    <!-- AI生成結果表示エリア -->
-    <section id="resultContainer" class="result-section hidden">
-      
-      <!-- 1. AI推定価格 -->
-      <div class="card price-card">
-        <h3>💰 AI推定価格</h3>
-        <div class="price-main">
-          <span>おすすめ出品価格</span>
-          <div class="price-val"><strong id="priceRecommended">0</strong> 円</div>
-          <small>想定範囲: <span id="priceRange">-</span></small>
+  <main class="container">
+    <section id="input-section" class="card">
+      <div class="upload-area" id="drop-zone">
+        <input type="file" id="file-input" accept="image/*" hidden>
+        <div id="upload-placeholder">
+          <span class="icon">📷</span>
+          <p class="upload-text">商品写真をアップロード</p>
+          <p class="upload-subtext">またはドラッグ＆ドロップ</p>
         </div>
-        <div class="price-grid">
-          <div>⚡ 早く売りたい<br><b id="priceQuick">0</b>円</div>
-          <div>⚖️ 標準<br><b id="priceStandard">0</b>円</div>
-          <div>💎 高め設定<br><b id="priceHigh">0</b>円</div>
-        </div>
-        <p class="disclaimer">※推定価格はAIによる参考値であり、実際の販売価格を保証するものではありません。</p>
-      </div>
-
-      <!-- 2. タイトル3案 -->
-      <div class="card">
-        <h3>🏷️ AIタイトル提案（3パターン）</h3>
-        
-        <div class="title-option">
-          <span class="label">【検索重視】</span>
-          <p id="titleSearch"></p>
-          <button onclick="copyText('titleSearch')">コピー</button>
-        </div>
-        
-        <div class="title-option">
-          <span class="label">【クリック重視】</span>
-          <p id="titleClick"></p>
-          <button onclick="copyText('titleClick')">コピー</button>
-        </div>
-
-        <div class="title-option">
-          <span class="label">【シンプル】</span>
-          <p id="titleSimple"></p>
-          <button onclick="copyText('titleSimple')">コピー</button>
-        </div>
-      </div>
-
-      <!-- 3. 写真チェック -->
-      <div class="card">
-        <h3>📸 AI写真チェック</h3>
-        <div id="photoCheckList" class="check-grid"></div>
-        <div class="suggestions-box">
-          <strong>💡 追加すると売れやすくなる写真:</strong>
-          <ul id="photoSuggestions"></ul>
-        </div>
-      </div>
-
-      <!-- 4. 商品説明文 -->
-      <div class="card">
-        <div class="card-header">
-          <h3>📝 商品説明文</h3>
-          <button onclick="copyText('descriptionText')">全文コピー</button>
-        </div>
-        <pre id="descriptionText" class="text-box"></pre>
-      </div>
-
-      <!-- 5. ハッシュタグ -->
-      <div class="card">
-        <div class="card-header">
-          <h3>#️⃣ ハッシュタグ</h3>
-          <button onclick="copyText('hashtagText')">コピー</button>
-        </div>
-        <p id="hashtagText" class="tag-box"></p>
-      </div>
-
-      <!-- 6. 梱包方法 ＆ アフィリエイト -->
-      <div class="card">
-        <h3>📦 おすすめ梱包方法</h3>
-        <p id="packingMethod" class="packing-text"></p>
-        
-        <div class="affiliate-section">
-          <div class="affiliate-header">
-            <span>📦 フリマ出品におすすめ</span>
-            <span class="pr-badge">PR</span>
+        <div id="preview-container" class="hidden">
+          <img id="image-preview" src="" alt="プレビュー">
+          <button type="button" id="change-image-btn" class="btn-secondary btn-sm">写真を変更</button>
+  <!-- 全体を包むレイアウトコンテナ -->
+  <div class="main-layout container">
+    
+    <!-- メインコンテンツ（左側） -->
+    <main class="main-content">
+      <!-- 入力フォーム画面 -->
+      <section id="input-section" class="card">
+        <div class="upload-area" id="drop-zone">
+          <input type="file" id="file-input" accept="image/*" hidden>
+          <div id="upload-placeholder">
+            <span class="icon">📷</span>
+            <p class="upload-text">商品写真をアップロード</p>
+            <p class="upload-subtext">またはドラッグ＆ドロップ</p>
           </div>
-          <div id="affiliateList" class="affiliate-list"></div>
+          <div id="preview-container" class="hidden">
+            <img id="image-preview" src="" alt="プレビュー">
+            <button type="button" id="change-image-btn" class="btn-secondary btn-sm">写真を変更</button>
+          </div>
+</div>
+      </div>
+
+      <div class="form-group-title">
+        <h3>商品について分かること（任意）</h3>
+        <p>分かる範囲で入力すると、より精度の高い文章が作成されます。</p>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-item">
+          <label for="brand">ブランド・メーカー名</label>
+          <input type="text" id="brand" placeholder="例：NIKE, ユニクロ">
         </div>
+        <div class="form-item">
+          <label for="category">カテゴリ（任意）</label>
+          <input type="text" id="category" placeholder="例：レディース / トップス / ニット">
+        <div class="form-group-title">
+          <h3>商品について分かること（任意）</h3>
+          <p>分かる範囲で入力すると、より精度の高い文章が作成されます。</p>
+</div>
+        <div class="form-item">
+          <label for="size">サイズ</label>
+          <input type="text" id="size" placeholder="例：M, 24.5cm">
+        </div>
+        <div class="form-item">
+          <label for="purchase-time">購入時期</label>
+          <input type="text" id="purchase-time" placeholder="例：半年前, 2024年頃">
+        </div>
+        <div class="form-item">
+          <label for="condition">商品の状態</label>
+          <input type="text" id="condition" placeholder="例：目立った傷なし, 新品未使用">
+        </div>
+        <div class="form-item">
+          <label for="shipping">発送方法</label>
+          <input type="text" id="shipping" placeholder="例：楽々メルカリ便（匿名配送）、1〜2日以内に発送">
+
+        <div class="form-grid">
+          <div class="form-item">
+            <label for="brand">ブランド・メーカー名</label>
+            <input type="text" id="brand" placeholder="例：NIKE, ユニクロ">
+          </div>
+          <div class="form-item">
+            <label for="category">カテゴリ（任意）</label>
+            <input type="text" id="category" placeholder="例：レディース / トップス / ニット">
+          </div>
+          <div class="form-item">
+            <label for="size">サイズ</label>
+            <input type="text" id="size" placeholder="例：M, 24.5cm">
+          </div>
+          <div class="form-item">
+            <label for="purchase-time">購入時期</label>
+            <input type="text" id="purchase-time" placeholder="例：半年前, 2024年頃">
+          </div>
+          <div class="form-item">
+            <label for="condition">商品の状態</label>
+            <input type="text" id="condition" placeholder="例：目立った傷なし, 新品未使用">
+          </div>
+          <div class="form-item">
+            <label for="shipping">発送方法</label>
+            <input type="text" id="shipping" placeholder="例：楽々メルカリ便（匿名配送）、1〜2日以内に発送">
+          </div>
+          <div class="form-item full-width">
+            <label for="hashtags">SEO・ハッシュタグ要望</label>
+            <input type="text" id="hashtags" placeholder="例：#韓国ファッション #秋冬コーデ を含める">
+          </div>
+</div>
+
+<div class="form-item full-width">
+          <label for="hashtags">SEO・ハッシュタグ要望</label>
+          <input type="text" id="hashtags" placeholder="例：#韓国ファッション #秋冬コーデ を含める">
+          <label for="notes">その他伝えたいこと</label>
+          <textarea id="notes" rows="3" placeholder="例：即購入OKです。定価は15,000円でした。"></textarea>
+</div>
       </div>
 
-      <!-- 7. PROプラン導線 -->
-      <div class="card pro-banner">
-        <span class="pro-tag">PRO Upgrade</span>
-        <h3>もっと便利に使う</h3>
-        <p>月額480円で「月50回生成・履歴保存・詳細分析」を解放</p>
-        <button onclick="openProModal()" class="btn-pro">PROプランを見る</button>
+      <div class="form-item full-width">
+        <label for="notes">その他伝えたいこと</label>
+        <textarea id="notes" rows="3" placeholder="例：即購入OKです。定価は15,000円でした。"></textarea>
       </div>
+        <button id="generate-btn" class="btn-primary" disabled>出品文を作成する</button>
 
+      <button id="generate-btn" class="btn-primary" disabled>出品文を作成する</button>
+
+      <div class="affiliate-card">
+        <h3>🧳 旅行や出張のお得な予約はこちら！</h3>
+        <div class="affiliate-banner-placeholder">
+          <a href="https://rpx.a8.net/svt/ejp?a8mat=4BCCJF+DVIPBM+2HOM+6I9N5&rakuten=y&a8ejpredirect=http%3A%2F%2Fhb.afl.rakuten.co.jp%2Fhgc%2F0eb4779e.5d30c5ba.0eb4779f.b871e4e3%2Fa26091659134_4BCCJF_DVIPBM_2HOM_6I9N5%3Fpc%3Dhttp%253A%252F%252Ftravel.rakuten.co.jp%252F%26m%3Dhttp%253A%252F%252Ftravel.rakuten.co.jp%252F" rel="nofollow">
+          <img src="https://hbb.afl.rakuten.co.jp/hsb/0ea7f9a4.79280dcb.0ea7f99d.1ac92fca/153145/" border="0" alt="楽天トラベル"></a>
+          <img border="0" width="1" height="1" src="https://www19.a8.net/0.gif?a8mat=4BCCJF+DVIPBM+2HOM+6I9N5" alt="">
+        <!-- 【アフィリエイト枠1】楽天トラベル -->
+        <div class="affiliate-card">
+          <h3>🧳 旅行や出張のお得な予約はこちら！</h3>
+          <div class="affiliate-banner-placeholder">
+            <a href="https://rpx.a8.net/svt/ejp?a8mat=4BCCJF+DVIPBM+2HOM+6I9N5&rakuten=y&a8ejpredirect=http%3A%2F%2Fhb.afl.rakuten.co.jp%2Fhgc%2F0eb4779e.5d30c5ba.0eb4779f.b871e4e3%2Fa26091659134_4BCCJF_DVIPBM_2HOM_6I9N5%3Fpc%3Dhttp%253A%252F%252Ftravel.rakuten.co.jp%252F%26m%3Dhttp%253A%252F%252Ftravel.rakuten.co.jp%252F" rel="nofollow">
+            <img src="https://hbb.afl.rakuten.co.jp/hsb/0ea7f9a4.79280dcb.0ea7f99d.1ac92fca/153145/" border="0" alt="楽天トラベル"></a>
+            <img border="0" width="1" height="1" src="https://www19.a8.net/0.gif?a8mat=4BCCJF+DVIPBM+2HOM+6I9N5" alt="">
+          </div>
+</div>
+      </div>
     </section>
-  </main>
 
-  <!-- PROプラン案内モーダル -->
-  <div id="proModal" class="modal hidden">
-    <div class="modal-content">
-      <span class="close" onclick="closeProModal()">&times;</span>
-      <h2>フリマAI PRO</h2>
-      <div class="plan-grid">
-        <div class="plan-card">
-          <h3>PRO</h3>
-          <p class="price">月額 480円</p>
-          <ul>
-            <li>月50回まで生成</li>
-            <li>タイトル3案・AI価格提案</li>
-            <li>写真チェック・梱包提案</li>
-            <li>広告表示の削減</li>
-          </ul>
-          <button class="btn-primary">PROに登録する</button>
+    <section id="loading-section" class="card hidden">
+      <div class="spinner"></div>
+      <p class="loading-text">AIが画像を解析して出品文を作成中...</p>
+      <p class="loading-subtext">数秒〜十数秒かかります。そのままお待ちください。</p>
+    </section>
+
+    <section id="result-section" class="hidden">
+      <div class="action-bar-top">
+        <button id="copy-all-btn" class="btn-primary btn-lg">✨ 出品全文をまとめてコピー</button>
+        <button id="reset-btn" class="btn-secondary">🔄 もう一度生成する</button>
+      </div>
+      </section>
+
+      <div class="result-card">
+        <div class="card-header">
+          <h2>■ 商品タイトル</h2>
+          <button class="copy-btn btn-secondary btn-sm" data-target="result-title">タイトルだけコピー</button>
         </div>
-        <div class="plan-card">
-          <h3>PRO+ (準備中)</h3>
-          <p class="price">月額 980円</p>
-          <ul>
-            <li>生成回数無制限</li>
-            <li>複数商品一括生成</li>
-            <li>テンプレート保存</li>
-          </ul>
-          <button class="btn-secondary" disabled>準備中</button>
+        <div class="card-body">
+          <p id="result-title" class="result-text bold"></p>
         </div>
       </div>
-    </div>
+      <!-- ローディング表示 -->
+      <section id="loading-section" class="card hidden">
+        <div class="spinner"></div>
+        <p class="loading-text">AIが画像を解析して出品文を作成中...</p>
+        <p class="loading-subtext">数秒〜十数秒かかります。そのままお待ちください。</p>
+      </section>
+
+      <div class="result-card">
+        <div class="card-header">
+          <h2>■ 商品説明文</h2>
+          <button class="copy-btn btn-secondary btn-sm" data-target="result-description">説明文だけコピー</button>
+      <!-- 生成結果画面 -->
+      <section id="result-section" class="hidden">
+        <div class="action-bar-top">
+          <button id="copy-all-btn" class="btn-primary btn-lg">✨ 出品全文をまとめてコピー</button>
+          <button id="reset-btn" class="btn-secondary">🔄 もう一度生成する</button>
+</div>
+        <div class="card-body">
+          <div id="result-description" class="result-text multiline"></div>
+        </div>
+      </div>
+
+      <div class="grid-2col">
+<div class="result-card">
+<div class="card-header">
+            <h2>■ 商品カテゴリ</h2>
+            <h2>■ 商品タイトル</h2>
+            <button class="copy-btn btn-secondary btn-sm" data-target="result-title">タイトルだけコピー</button>
+</div>
+<div class="card-body">
+            <p id="result-category" class="result-text"></p>
+            <p id="result-title" class="result-text bold"></p>
+</div>
+</div>
+
+<div class="result-card">
+<div class="card-header">
+            <h2>■ 商品の特徴</h2>
+            <h2>■ 商品説明文</h2>
+            <button class="copy-btn btn-secondary btn-sm" data-target="result-description">説明文だけコピー</button>
+</div>
+<div class="card-body">
+            <ul id="result-features" class="feature-list"></ul>
+            <div id="result-description" class="result-text multiline"></div>
+</div>
+</div>
+      </div>
+
+      <div class="result-card">
+        <div class="card-header">
+          <h2>■ 検索キーワード</h2>
+          <button class="copy-btn btn-secondary btn-sm" data-target="result-keywords">キーワードだけコピー</button>
+        <div class="grid-2col">
+          <div class="result-card">
+            <div class="card-header">
+              <h2>■ 商品カテゴリ</h2>
+            </div>
+            <div class="card-body">
+              <p id="result-category" class="result-text"></p>
+            </div>
+          </div>
+
+          <div class="result-card">
+            <div class="card-header">
+              <h2>■ 商品の特徴</h2>
+            </div>
+            <div class="card-body">
+              <ul id="result-features" class="feature-list"></ul>
+            </div>
+          </div>
+</div>
+        <div class="card-body">
+          <div id="result-keywords" class="tags-container"></div>
+
+        <div class="result-card">
+          <div class="card-header">
+            <h2>■ 検索キーワード</h2>
+            <button class="copy-btn btn-secondary btn-sm" data-target="result-keywords">キーワードだけコピー</button>
+          </div>
+          <div class="card-body">
+            <div id="result-keywords" class="tags-container"></div>
+          </div>
+</div>
+      </div>
+
+      <div class="result-card">
+        <div class="card-header">
+          <h2>■ ハッシュタグ</h2>
+          <button class="copy-btn btn-secondary btn-sm" data-target="result-hashtags">ハッシュタグだけコピー</button>
+        <div class="result-card">
+          <div class="card-header">
+            <h2>■ ハッシュタグ</h2>
+            <button class="copy-btn btn-secondary btn-sm" data-target="result-hashtags">ハッシュタグだけコピー</button>
+          </div>
+          <div class="card-body">
+            <div id="result-hashtags" class="tags-container"></div>
+          </div>
+</div>
+        <div class="card-body">
+          <div id="result-hashtags" class="tags-container"></div>
+
+        <!-- 【アフィリエイト枠2】お名前.com -->
+        <div class="affiliate-card">
+          <h3>🌐 自分だけのWebサイトやショップを作成！おすすめドメイン取得</h3>
+          <div class="affiliate-banner-placeholder">
+            <a href="https://px.a8.net/svt/ejp?a8mat=4BCCJF+DW44XE+50+2HMLEP" rel="nofollow">
+            <img border="0" width="200" height="200" alt="" src="https://www29.a8.net/svt/bgt?aid=260916603840&wid=001&eno=01&mid=s0000000018015054000&mc=1"></a>
+            <img border="0" width="1" height="1" src="https://www16.a8.net/0.gif?a8mat=4BCCJF+DW44XE+50+2HMLEP" alt="">
+          </div>
+</div>
+      </section>
+    </main>
+
+    <!-- サイドバー（右側） -->
+    <aside class="sidebar">
+      <!-- 使い方ガイド -->
+      <div class="sidebar-card">
+        <h3>💡 フリマAIメーカーの使い方</h3>
+        <ol class="sidebar-list">
+          <li>出品したい商品の画像をアップロード</li>
+          <li>分かる範囲でブランドや状態を入力</li>
+          <li>「出品文を作成する」をクリックするだけ！</li>
+        </ol>
+</div>
+
+      <div class="affiliate-card">
+        <h3>🌐 自分だけのWebサイトやショップを作成！おすすめドメイン取得</h3>
+      <!-- サイドバー用の広告・追加コンテンツ枠 -->
+      <div class="sidebar-card">
+        <h3>📢 おすすめサービス</h3>
+<div class="affiliate-banner-placeholder">
+          <!-- ここに新しい広告コードや告知を自由に追加できます -->
+<a href="https://px.a8.net/svt/ejp?a8mat=4BCCJF+DW44XE+50+2HMLEP" rel="nofollow">
+          <img border="0" width="200" height="200" alt="" src="https://www29.a8.net/svt/bgt?aid=260916603840&wid=001&eno=01&mid=s0000000018015054000&mc=1"></a>
+          <img border="0" width="
+          <img border="0" width="200" height="200" alt="お名前.com" src="https://www29.a8.net/svt/bgt?aid=260916603840&wid=001&eno=01&mid=s0000000018015054000&mc=1"></a>
+        </div>
+      </div>
+    </aside>
+
   </div>
+
+  <div id="toast" class="toast hidden">コピーしました！</div>
 
   <script src="app.js"></script>
 </body>
