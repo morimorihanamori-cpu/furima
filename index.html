@@ -5,6 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>フリマAIメーカー | 無料でフリマ出品文を自動生成</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* アフィリエイト枠用のスタイルを追加（style.cssに追記してもOK） */
+    .affiliate-card {
+      background: #f8f9fa;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 24px;
+      text-align: center;
+    }
+    .affiliate-card h3 {
+      font-size: 1rem;
+      color: #333;
+      margin-bottom: 12px;
+    }
+    .affiliate-banner-placeholder {
+      background: #fff;
+      border: 2px dashed #cbd5e1;
+      padding: 20px;
+      border-radius: 8px;
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
 <body>
 
@@ -73,6 +97,15 @@
       </div>
 
       <button id="generate-btn" class="btn-primary" disabled>出品文を作成する</button>
+
+      <!-- 【アフィリエイト枠1】入力フォーム下の広告スペース -->
+      <div class="affiliate-card">
+        <h3>📦 出品・発送に必要な梱包資材をお得に準備！</h3>
+        <div class="affiliate-banner-placeholder">
+          <!-- ここにA8.netやAmazonアソシエイトなどの広告コード（<a href="...">...</a>）を貼る -->
+          【広告バナー・リンク挿入エリア】
+        </div>
+      </div>
     </section>
 
     <!-- ローディング表示 -->
@@ -150,6 +183,15 @@
         </div>
         <div class="card-body">
           <div id="result-hashtags" class="tags-container"></div>
+        </div>
+      </div>
+
+      <!-- 【アフィリエイト枠2】生成結果（コピー後）下の広告スペース -->
+      <div class="affiliate-card">
+        <h3>💡 出品作業をもっと効率化！おすすめの便利グッズ・サービス</h3>
+        <div class="affiliate-banner-placeholder">
+          <!-- ここに広告コードを貼る -->
+          【広告バナー・リンク挿入エリア】
         </div>
       </div>
     </section>
