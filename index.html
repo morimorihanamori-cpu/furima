@@ -45,7 +45,6 @@
   </header>
 
   <main class="container">
-    <!-- 入力フォーム画面 -->
     <section id="input-section" class="card">
       <div class="upload-area" id="drop-zone">
         <input type="file" id="file-input" accept="image/*" hidden>
@@ -103,32 +102,28 @@
 
       <button id="generate-btn" class="btn-primary" disabled>出品文を作成する</button>
 
-      <!-- 【アフィリエイト枠1】入力フォーム下の広告スペース（DMM.com証券） -->
       <div class="affiliate-card">
-        <h3>📦 おすすめの関連サービス</h3>
+        <h3>🧳 旅行や出張のお得な予約はこちら！</h3>
         <div class="affiliate-banner-placeholder">
-          <a href="https://px.a8.net/svt/ejp?a8mat=4BCCJF+DWPKJ6+1WP2+1HPXWX" rel="nofollow">
-          <img border="0" width="300" height="300" alt="" src="https://www23.a8.net/svt/bgt?aid=260916603841&wid=001&eno=01&mid=s00000008903009023000&mc=1"></a>
-          <img border="0" width="1" height="1" src="https://www19.a8.net/0.gif?a8mat=4BCCJF+DWPKJ6+1WP2+1HPXWX" alt="">
+          <a href="https://rpx.a8.net/svt/ejp?a8mat=4BCCJF+DVIPBM+2HOM+6I9N5&rakuten=y&a8ejpredirect=http%3A%2F%2Fhb.afl.rakuten.co.jp%2Fhgc%2F0eb4779e.5d30c5ba.0eb4779f.b871e4e3%2Fa26091659134_4BCCJF_DVIPBM_2HOM_6I9N5%3Fpc%3Dhttp%253A%252F%252Ftravel.rakuten.co.jp%252F%26m%3Dhttp%253A%252F%252Ftravel.rakuten.co.jp%252F" rel="nofollow">
+          <img src="https://hbb.afl.rakuten.co.jp/hsb/0ea7f9a4.79280dcb.0ea7f99d.1ac92fca/153145/" border="0" alt="楽天トラベル"></a>
+          <img border="0" width="1" height="1" src="https://www19.a8.net/0.gif?a8mat=4BCCJF+DVIPBM+2HOM+6I9N5" alt="">
         </div>
       </div>
     </section>
 
-    <!-- ローディング表示 -->
     <section id="loading-section" class="card hidden">
       <div class="spinner"></div>
       <p class="loading-text">AIが画像を解析して出品文を作成中...</p>
       <p class="loading-subtext">数秒〜十数秒かかります。そのままお待ちください。</p>
     </section>
 
-    <!-- 生成結果画面 -->
     <section id="result-section" class="hidden">
       <div class="action-bar-top">
         <button id="copy-all-btn" class="btn-primary btn-lg">✨ 出品全文をまとめてコピー</button>
         <button id="reset-btn" class="btn-secondary">🔄 もう一度生成する</button>
       </div>
 
-      <!-- 商品タイトル -->
       <div class="result-card">
         <div class="card-header">
           <h2>■ 商品タイトル</h2>
@@ -139,7 +134,6 @@
         </div>
       </div>
 
-      <!-- 商品説明 -->
       <div class="result-card">
         <div class="card-header">
           <h2>■ 商品説明文</h2>
@@ -150,7 +144,6 @@
         </div>
       </div>
 
-      <!-- カテゴリ & 特徴 -->
       <div class="grid-2col">
         <div class="result-card">
           <div class="card-header">
@@ -171,7 +164,6 @@
         </div>
       </div>
 
-      <!-- 検索キーワード & ハッシュタグ -->
       <div class="result-card">
         <div class="card-header">
           <h2>■ 検索キーワード</h2>
@@ -192,21 +184,9 @@
         </div>
       </div>
 
-      <!-- 【アフィリエイト枠2】生成結果（コピー後）下の広告スペース（お名前.com） -->
       <div class="affiliate-card">
         <h3>🌐 自分だけのWebサイトやショップを作成！おすすめドメイン取得</h3>
         <div class="affiliate-banner-placeholder">
           <a href="https://px.a8.net/svt/ejp?a8mat=4BCCJF+DW44XE+50+2HMLEP" rel="nofollow">
           <img border="0" width="200" height="200" alt="" src="https://www29.a8.net/svt/bgt?aid=260916603840&wid=001&eno=01&mid=s0000000018015054000&mc=1"></a>
-          <img border="0" width="1" height="1" src="https://www16.a8.net/0.gif?a8mat=4BCCJF+DW44XE+50+2HMLEP" alt="">
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- コピー通知ポップアップ -->
-  <div id="toast" class="toast hidden">コピーしました！</div>
-
-  <script src="app.js"></script>
-</body>
-</html>
+          <img border="0" width="
