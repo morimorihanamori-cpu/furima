@@ -2,7 +2,22 @@ export async function onRequestPost(context) {
   const { request, env } = context;
 
   try {
+    // 1. APIキーの設定チェック
+    if (!env.GEMINI_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: "GEMINI_API_KEY が設定されていません。Pagesの設定画面を確認してください。" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const { image, info } = await request.json();
+
+    if (!image) {
+      return new Response(
+        JSON.stringify({ error: "画像データが送信されていません。" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     const prompt = `
 あなたはフリマアプリ（メルカリ・ラクマ・Yahoo!フリマ等）の優秀な出品サポートAIです。
@@ -31,8 +46,9 @@ export async function onRequestPost(context) {
 }
 `;
 
+    // 2. Gemini API リクエスト（v1beta + gemini-2.5-flash / エラー回避のフォールバック対応）
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -61,18 +77,19 @@ export async function onRequestPost(context) {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error?.message || "Gemini API Error");
+      throw new Error(data.error?.message || "Gemini API エラーが発生しました。");
     }
 
     const resultText = data.candidates[0].content.parts[0].text;
 
     return new Response(resultText, {
+      status: 200,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 }
