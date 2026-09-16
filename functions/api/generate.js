@@ -21,7 +21,7 @@ export async function onRequestPost(context) {
 
     const prompt = `
 あなたはフリマアプリ（メルカリ・ラクマ・Yahoo!フリマ等）の優秀な出品サポートAIです。
-画像と以下の入力情報を分析し、購入意欲を高める魅力的な出品データを作成してください。
+画像と以下の入力情報を分析し、購入意欲を高める魅力的な出品データおよび参考相場価格を作成してください。
 
 【ユーザー入力情報】
 - ブランド/メーカー: ${info?.brand || "画像から判断"}
@@ -33,6 +33,11 @@ export async function onRequestPost(context) {
 - SEO・ハッシュタグ要望: ${info?.hashtags || "指定なし"}
 - その他備考: ${info?.notes || "なし"}
 
+【価格算出に関する注意】
+- ブランド、カテゴリ、商品状態、写真から判別できる特徴を総合的に考慮して、日本国内フリマアプリの妥当な参考価格（円）を算出してください。
+- 写真や入力情報から商品の具体的な情報を確認・判定できない場合は、無理に具体的な価格を断定せず priceEstimate を null にしてください。
+- 写真から確認できない情報を勝手に捏造しないでください。
+
 【出力フォーマット】
 必ず以下のJSON形式のみで出力してください（Markdownのコードブロックを含めないでください）。
 
@@ -42,11 +47,17 @@ export async function onRequestPost(context) {
   "category": "推定されるカテゴリ名",
   "features": ["特徴1", "特徴2", "特徴3"],
   "keywords": ["検索用キーワード1", "キーワード2", "キーワード3"],
-  "hashtags": ["#ハッシュタグ1", "#ハッシュタグ2", "#ハッシュタグ3"]
+  "hashtags": ["#ハッシュタグ1", "#ハッシュタグ2", "#ハッシュタグ3"],
+  "priceEstimate": {
+    "quickSell": 2980,
+    "standard": 3280,
+    "high": 3580,
+    "recommended": 3280
+  }
 }
 `;
 
-    // 2. Gemini API リクエスト（指定された gemini-3.6-flash を使用）
+    // 2. Gemini API リクエスト
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${env.GEMINI_API_KEY}`,
       {
