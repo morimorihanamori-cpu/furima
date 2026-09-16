@@ -39,8 +39,9 @@ export async function onRequestPost(context) {
 }
 `;
 
-    // Gemini APIリクエストの作成
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
+    // Gemini APIリクエストの作成（最新モデル指定）
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    
     const apiPayload = {
       contents: [{
         parts: [
