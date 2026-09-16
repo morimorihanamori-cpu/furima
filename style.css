@@ -356,3 +356,58 @@ body {
   visibility: visible !important;
   opacity: 1 !important;
 }
+
+/* --- フリマ出品におすすめ商品セクション（追加） --- */
+.recommend-section {
+  margin-top: 20px;
+}
+
+.recommend-title {
+  font-size: 1.05rem;
+  color: #334155;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.recommend-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .recommend-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.recommend-card {
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.recommend-item-title {
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-bottom: 6px;
+}
+
+.recommend-item-desc {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 12px;
+  flex-grow: 1;
+}
+
+.recommend-btn {
+  text-align: center;
+  text-decoration: none;
+  display: block;
+}
