@@ -1,12 +1,15 @@
 export async function onRequestPost(context) {
   const { request, env } = context;
 
+  // 共通ヘッダー
+  const jsonHeaders = { "Content-Type": "application/json; charset=utf-8" };
+
   try {
-    // 1. APIキーの設定チェック
+    // 1. APIキーの存在確認
     if (!env.GEMINI_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "GEMINI_API_KEY が設定されていません。Pagesの設定画面を確認してください。" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({ error: "GEMINI_API_KEY が設定されていません。Cloudflare Pagesの設定画面を確認してください。" }),
+        { status: 500, headers: jsonHeaders }
       );
     }
 
@@ -15,19 +18,19 @@ export async function onRequestPost(context) {
     if (!image) {
       return new Response(
         JSON.stringify({ error: "画像データが送信されていません。" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: jsonHeaders }
       );
     }
 
-    // 2. Base64データの整形
+    // 2. Base64データとMIMEタイプの切り出し
     const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
     const mimeTypeMatch = image.match(/^data:(image\/\w+);base64,/);
     const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : "image/jpeg";
 
-    // 3. AIプロンプトの構築（厳格なJSON指定）
+    // 3. AIプロンプトの構築
     const systemPrompt = `
 あなたはフリマアプリ（メルカリ・ラクマ・Yahoo!フリマ等）のプロ出品サポートAIです。
-提供された商品画像とユーザー入力情報を分析し、以下の要件を満たす純粋なJSONオブジェクトのみを出力してください。Markdownの装飾（\`\`\`jsonなど）は一切含めないでください。
+提供された商品画像とユーザー入力情報を分析し、要件を満たす純粋なJSONオブジェクトのみを出力してください。Markdown装飾（\`\`\`jsonなど）は絶対に含めないでください。
 
 【ユーザー入力情報】
 - ブランド/メーカー: ${info?.brand || "画像から判断"}
@@ -40,7 +43,7 @@ export async function onRequestPost(context) {
 - その他備考: ${info?.notes || "なし"}
 
 【重要なルール】
-- 写真や入力から確認できない情報（キズ・汚れ・状態など）は勝手に「美品」などと断定せず、「不明」または「要確認」としてください。
+- 写真や入力から確認できない情報（キズ・汚れ・状態など）は勝手に断定せず、「不明」または「要確認」としてください。
 - タイトルは【検索重視】【クリック重視】【シンプル】の3パターン作成してください。
 - カテゴリは「レディース/メンズ/キッズ/靴/バッグ/家電/ゲーム/本/おもちゃ/コスメ/その他」から選んでください。
 
@@ -73,13 +76,13 @@ export async function onRequestPost(context) {
   },
   "packing": {
     "method": "おすすめの梱包方法説明",
-    "type": "clothes" // clothes, fragile, book, default のいずれか
+    "type": "clothes"
   }
 }
 `;
 
-    // 4. Gemini API REST呼び出し
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.GEMINI_API_KEY}`;
+    // 4. Gemini API 呼び出し (gemini-2.5-flashを使用)
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`;
     
     const apiResponse = await fetch(url, {
       method: "POST",
@@ -109,24 +112,42 @@ export async function onRequestPost(context) {
       console.error("Gemini API Error:", errorText);
       return new Response(
         JSON.stringify({ error: "AIの処理中にエラーが発生しました。時間をおいて再試行してください。" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        { status: 500, headers: jsonHeaders }
       );
     }
 
     const apiResult = await apiResponse.json();
-    const rawText = apiResult.candidates?.[0]?.content?.parts?.[0]?.text;
-    const parsedData = JSON.parse(rawText);
+    let rawText = apiResult.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    return new Response(JSON.stringify({ success: true, data: parsedData }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" }
-    });
+    if (!rawText) {
+      throw new Error("APIからの応答テキストが空です。");
+    }
+
+    // 5. JSON文字列の除去・クリーニング処理 (コードブロック混入対策)
+    rawText = rawText.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "").trim();
+
+    let parsedData;
+    try {
+      parsedData = JSON.parse(rawText);
+    } catch (parseErr) {
+      console.error("JSON Parse Error. Raw Text:", rawText);
+      return new Response(
+        JSON.stringify({ error: "AIレスポンスの解析に失敗しました。" }),
+        { status: 500, headers: jsonHeaders }
+      );
+    }
+
+    // 6. 正常レスポンスの返却
+    return new Response(
+      JSON.stringify({ success: true, data: parsedData }),
+      { status: 200, headers: jsonHeaders }
+    );
 
   } catch (err) {
     console.error("Server Error:", err);
     return new Response(
       JSON.stringify({ error: "サーバー内でエラーが発生しました。" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: jsonHeaders }
     );
   }
 }
