@@ -104,6 +104,39 @@
           <button id="reset-btn" class="btn-secondary">🔄 もう一度生成する</button>
         </div>
 
+        <!-- 【追加機能】AI推定価格 -->
+        <div class="result-card">
+          <div class="card-header">
+            <h2>■ 価格の目安</h2>
+          </div>
+          <div class="card-body">
+            <div id="price-estimate-content">
+              <div class="price-grid">
+                <div class="price-item">
+                  <span class="price-label">早く売りたい</span>
+                  <span id="price-quicksell-val" class="price-val">-</span>
+                </div>
+                <div class="price-item">
+                  <span class="price-label">標準</span>
+                  <span id="price-standard-val" class="price-val">-</span>
+                </div>
+                <div class="price-item">
+                  <span class="price-label">高め</span>
+                  <span id="price-high-val" class="price-val">-</span>
+                </div>
+              </div>
+              <div class="price-recommended-box">
+                <span class="price-recommended-label">【おすすめ出品価格】</span>
+                <span id="price-recommended-val" class="price-recommended-val">-</span>
+              </div>
+              <p class="price-disclaimer">※AIによる参考価格です。実際の相場や商品の状態によって価格は異なります。</p>
+            </div>
+            <div id="price-estimate-error" class="result-text hidden">
+              価格を推定できませんでした
+            </div>
+          </div>
+        </div>
+
         <div class="result-card">
           <div class="card-header">
             <h2>■ 商品タイトル</h2>
@@ -174,7 +207,7 @@
           </div>
         </div>
 
-        <!-- 【追加機能】フリマ出品におすすめ商品セクション -->
+        <!-- フリマ出品におすすめ商品セクション -->
         <div class="card recommend-section">
           <h3 class="recommend-title">📦 フリマ出品におすすめ</h3>
           <div class="recommend-grid">
@@ -182,7 +215,6 @@
             <div class="recommend-card">
               <h4 class="recommend-item-title">防水梱包袋（A4/B5サイズ）</h4>
               <p class="recommend-item-desc">衣類や小物を濡れや汚れからしっかり守る厚手タイプの透明袋です。</p>
-              <!-- URLは href="..." の箇所を差し替えるだけで変更可能です -->
               <a href="#" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-sm recommend-btn">詳しく見る</a>
             </div>
 
@@ -219,7 +251,6 @@
       <div class="sidebar-card">
         <h3>📢 おすすめサービス</h3>
         <div class="affiliate-banner-placeholder">
-          <!-- ここに新しい広告コードや告知を自由に追加できます -->
           <a href="https://px.a8.net/svt/ejp?a8mat=4BCCJF+DW44XE+50+2HMLEP" rel="nofollow">
           <img border="0" width="200" height="200" alt="お名前.com" src="https://www29.a8.net/svt/bgt?aid=260916603840&wid=001&eno=01&mid=s0000000018015054000&mc=1"></a>
         </div>
